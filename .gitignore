@@ -1,0 +1,46 @@
+# Don't commit these files
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Environment variables
+.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+nohup.out
+
+# Test files
+test_*.py
+debug_*.py
+*_debug.*
+
+# Temporary files
+*.tmp
+*.bak
+flow_*.html
+flow_*.json

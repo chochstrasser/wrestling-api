@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+gunicorn
+sqlalchemy
+psycopg2-binary
+python-dotenv
+requests
+beautifulsoup4
+playwright  # if scraping JS-heavy sites
+stripe
