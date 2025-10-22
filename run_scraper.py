@@ -1,18 +1,28 @@
 """
 Script to run the NCAA scraper and populate the database
 """
-from app.scrappers.ncaa import NCAAScraper
+import argparse
+from app.scrappers.ncaa import NCAAScraper, PlaywrightScraper
 from app.database import SessionLocal
 from app.models import Wrestler
 from datetime import datetime
 
-# Uncomment the line below to use Playwright scraper (requires: playwright install chromium)
-# from app.scrappers.ncaa import PlaywrightScraper as NCAAScraper
-
-def run_scraper():
-    print("Starting NCAA Wrestling Scraper...")
+def run_scraper(use_playwright=False):
+    scraper_type = "Playwright" if use_playwright else "Basic"
+    print(f"Starting NCAA Wrestling Scraper ({scraper_type})...")
     print("="*60)
-    scraper = NCAAScraper()
+
+    if use_playwright:
+        try:
+            scraper = PlaywrightScraper()
+        except ImportError as e:
+            print("❌ Playwright not installed!")
+            print("\nTo use Playwright scraper, run:")
+            print("  pip install playwright")
+            print("  playwright install chromium")
+            return
+    else:
+        scraper = NCAAScraper()
     
     try:
         print("Fetching rankings from sources...")
@@ -80,4 +90,18 @@ def run_scraper():
         traceback.print_exc()
 
 if __name__ == "__main__":
-    run_scraper()
+    parser = argparse.ArgumentParser(description="Run NCAA Wrestling Scraper")
+    parser.add_argument(
+        '--playwright',
+        action='store_true',
+        help='Use Playwright scraper for JavaScript-rendered sites (requires playwright)'
+    )
+    parser.add_argument(
+        '-p',
+        action='store_true',
+        dest='playwright',
+        help='Shorthand for --playwright'
+    )
+
+    args = parser.parse_args()
+    run_scraper(use_playwright=args.playwright)
