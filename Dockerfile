@@ -20,8 +20,8 @@ RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
     elif [ -f package-lock.json ]; then npm ci; \
     else npm install; fi
 
-# Install Playwright dependencies for scraping
-RUN npx playwright install --with-deps chromium
+# Install Playwright system dependencies as root
+RUN npx playwright install-deps chromium
 
 # Copy application files
 COPY . .
@@ -29,9 +29,12 @@ COPY . .
 # Verify node_modules exists
 RUN ls -la /app && ls -la /app/node_modules | head -20
 
-# Create non-root user (use node user that comes with the image)
+# Create non-root user and set ownership
 RUN chown -R node:node /app
 USER node
+
+# Install Playwright browsers as the node user (no system deps needed)
+RUN npx playwright install chromium
 
 # Expose port
 EXPOSE 8000
