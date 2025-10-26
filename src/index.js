@@ -3,6 +3,7 @@ import { config } from './config.js';
 import { initDatabase } from './database.js';
 import rankingsRouter from './routes/rankings.js';
 import userRouter from './routes/user.js';
+import scraperRouter from './routes/scraper.js';
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.get('/', (req, res) => {
 // Routes
 app.use('/api/v1', rankingsRouter);
 app.use('/api/v1', userRouter);
+app.use('/api/v1', scraperRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

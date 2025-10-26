@@ -20,8 +20,8 @@ RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
     elif [ -f package-lock.json ]; then npm ci; \
     else npm install; fi
 
-# Install Playwright dependencies (optional, for scraping)
-# RUN npx playwright install-deps chromium
+# Install Playwright dependencies for scraping
+RUN npx playwright install --with-deps chromium
 
 # Copy application files
 COPY . .

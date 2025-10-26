@@ -121,6 +121,29 @@ node scripts/importCsv.js wrestlers.csv
 
 ### Web Scraping
 
+#### Option 1: Via API Endpoint (Recommended for Production)
+
+This is the best option for Railway and other cloud deployments:
+
+```bash
+# Trigger scraper (uses Playwright by default)
+curl -X POST \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"usePlaywright": true, "clearExisting": true}' \
+  https://your-app.railway.app/api/v1/scraper/run
+
+# Check scraper status
+curl -H "x-api-key: YOUR_API_KEY" \
+  https://your-app.railway.app/api/v1/scraper/status
+```
+
+Request body options:
+- `usePlaywright` (boolean, default: true) - Use Playwright for JS-rendered sites
+- `clearExisting` (boolean, default: true) - Clear existing data before importing
+
+#### Option 2: Command Line Scripts (Local Development)
+
 Basic scraper (using Cheerio):
 
 ```bash
@@ -164,7 +187,8 @@ wrestling-api/
 │   │   └── auth.js           # Authentication & rate limiting
 │   ├── routes/
 │   │   ├── rankings.js       # Rankings endpoints
-│   │   └── user.js           # User/signup endpoints
+│   │   ├── user.js           # User/signup endpoints
+│   │   └── scraper.js        # Scraper trigger endpoints
 │   └── scrapers/
 │       ├── ncaa.js           # Basic scraper (Cheerio)
 │       └── playwright.js     # Playwright scraper
@@ -193,6 +217,8 @@ wrestling-api/
 
 - `GET /api/v1/rankings` - Get all wrestler rankings
 - `GET /api/v1/rankings?weight_class={weight}` - Filter by weight class
+- `POST /api/v1/scraper/run` - Trigger scraper to populate database
+- `GET /api/v1/scraper/status` - Check database status and scraper health
 
 ## Rate Limiting
 
