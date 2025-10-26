@@ -2,6 +2,9 @@ FROM node:18-slim
 
 WORKDIR /app
 
+# Enable Corepack for Yarn version management
+RUN corepack enable
+
 # Install dependencies
 COPY package.json yarn.lock* package-lock.json* ./
 RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
