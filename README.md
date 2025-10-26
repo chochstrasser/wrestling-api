@@ -64,6 +64,7 @@ curl -X POST "http://localhost:8000/api/v1/signup?email=your@email.com"
 ```
 
 Response:
+
 ```json
 {
   "email": "your@email.com",
@@ -105,6 +106,7 @@ node scripts/importCsv.js create
 ```
 
 This creates `wrestlers_sample.csv` with the format:
+
 ```csv
 rank,name,school,weight_class,source
 1,Spencer Lee,Iowa,125,FloWrestling
@@ -181,12 +183,14 @@ wrestling-api/
 ## API Endpoints
 
 ### Public Endpoints
+
 - `GET /` - Welcome message
 - `POST /api/v1/signup?email={email}` - Get API key
 - `GET /api/v1/user?email={email}` - Get user info
 - `DELETE /api/v1/user?email={email}` - Delete user account
 
 ### Authenticated Endpoints (require x-api-key header)
+
 - `GET /api/v1/rankings` - Get all wrestler rankings
 - `GET /api/v1/rankings?weight_class={weight}` - Filter by weight class
 
@@ -200,9 +204,11 @@ Rate limits are tracked monthly per user in the APIUsage table.
 ## Database
 
 ### Default: SQLite
+
 By default, the API uses SQLite for easy local development. The database file is `wrestling_api.db`.
 
 ### PostgreSQL (Production)
+
 For production, set the DATABASE_URL environment variable:
 
 ```env
@@ -212,12 +218,15 @@ DATABASE_URL=postgresql://user:password@host:5432/dbname
 ### Database Schema
 
 **Users**
+
 - id, email (unique), api_key (unique), plan (free/pro/business)
 
 **Wrestlers**
+
 - id, name, school, weight_class, rank, source, last_updated
 
 **APIUsage**
+
 - id, user_id (FK), date, requests (count)
 
 ## Production Deployment
@@ -248,6 +257,7 @@ web: node src/index.js
 ```
 
 Set environment variables in your platform's dashboard:
+
 - `DATABASE_URL` (PostgreSQL connection string)
 - `STRIPE_API_KEY` (optional)
 - `STRIPE_WEBHOOK_SECRET` (optional)
@@ -266,11 +276,13 @@ NODE_ENV=production
 ## Weight Classes
 
 NCAA Division I weight classes:
+
 - 125, 133, 141, 149, 157, 165, 174, 184, 197, 285 lbs
 
 ## Data Sources
 
 Rankings can be sourced from:
+
 - FloWrestling: https://www.flowrestling.org/rankings
 - NCAA.com: https://www.ncaa.com/rankings/wrestling/d1
 - Manual CSV import (recommended for accuracy)
@@ -292,33 +304,24 @@ yarn test          # Test scraper without saving
 ## Troubleshooting
 
 ### "Invalid API key"
+
 - Sign up first: `POST /api/v1/signup?email=your@email.com`
 - Include header: `x-api-key: YOUR_KEY`
 
 ### "Free tier limit reached"
+
 - Wait until next month (usage resets monthly)
 - Or manually update user plan in database to 'pro'
 
 ### Empty rankings
+
 - Import data: `node scripts/importCsv.js wrestlers_sample.csv`
 - Or run scraper: `yarn scrape`
 
 ### Scraper finds no data
+
 - Try Playwright scraper: `node scripts/runScraper.js --playwright`
 - Or use CSV import method (most reliable)
-
-## Migration from Python
-
-This project has been converted from Python/FastAPI to Node.js/Express. Key changes:
-
-- FastAPI → Express.js
-- SQLAlchemy → Sequelize
-- BeautifulSoup → Cheerio
-- Python Playwright → Node.js Playwright
-- Uvicorn/Gunicorn → Node.js HTTP server
-- pip/requirements.txt → yarn/npm/package.json
-
-All API endpoints and functionality remain the same.
 
 ## License
 

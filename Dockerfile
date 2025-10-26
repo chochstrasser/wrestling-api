@@ -2,6 +2,13 @@ FROM node:18-slim
 
 WORKDIR /app
 
+# Install Python and build tools for native dependencies (sqlite3)
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
 # Enable Corepack for Yarn version management
 RUN corepack enable
 
