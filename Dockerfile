@@ -12,8 +12,10 @@ RUN apt-get update && apt-get install -y \
 # Enable Corepack for Yarn version management
 RUN corepack enable
 
+# Copy package files
+COPY package.json yarn.lock* package-lock.json* .yarnrc.yml* ./
+
 # Install dependencies
-COPY package.json yarn.lock* package-lock.json* ./
 RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
     elif [ -f package-lock.json ]; then npm ci; \
     else npm install; fi
@@ -21,8 +23,11 @@ RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
 # Install Playwright dependencies (optional, for scraping)
 # RUN npx playwright install-deps chromium
 
-# Copy application
+# Copy application files
 COPY . .
+
+# Verify node_modules exists
+RUN ls -la /app && ls -la /app/node_modules | head -20
 
 # Create non-root user (use node user that comes with the image)
 RUN chown -R node:node /app
