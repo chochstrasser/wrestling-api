@@ -1,6 +1,6 @@
-# Wrestling API
+# Wrestling API (Node.js/Express)
 
-A FastAPI-based REST API for NCAA Division I wrestling rankings with authentication, rate limiting, and subscription plans.
+A Node.js Express REST API for NCAA Division I wrestling rankings with authentication, rate limiting, and subscription plans.
 
 ## Features
 
@@ -10,77 +10,48 @@ A FastAPI-based REST API for NCAA Division I wrestling rankings with authenticat
 - 💳 Stripe integration ready for paid plans
 - 📝 CSV import system for easy data management
 - 🔍 Filter rankings by weight class
+- 🌐 Web scraping support (Cheerio + Playwright)
 
 ## Quick Start
 
-### Local Development (2 minutes)
+### Installation
 
 ```bash
-# One-command setup
-./setup.sh
+# Install dependencies (using yarn as per your preference)
+yarn install
 
-# Start the server
-uvicorn app.main:app --reload
+# Or with npm
+npm install
 ```
 
-Your API is now running at `http://127.0.0.1:8000`
-
-**See `RUN_LOCALLY.md` for detailed local development guide.**
-
----
-
-### Full Setup (Manual)
-
-### 1. Installation
-
-```bash
-# Clone or navigate to project
-cd wrestling-api
-
-# Create virtual environment
-python3 -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### 2. Configuration
+### Configuration
 
 Create a `.env` file:
 
 ```env
-# Database
-DATABASE_URL=sqlite:///./wrestling_api.db
+# Database (defaults to SQLite if not specified)
+DATABASE_URL=sqlite:wrestling_api.db
 
-# Stripe (add your keys when ready)
+# Stripe (optional - add when ready)
 STRIPE_API_KEY=your_stripe_api_key_here
 STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret_here
+
+# Server
+PORT=8000
+NODE_ENV=development
 ```
 
-### 3. Initialize Database
+### Start Server
 
 ```bash
-python -c "from app.database import Base, engine; Base.metadata.create_all(bind=engine)"
+# Development mode (with auto-reload)
+yarn dev
+
+# Production mode
+yarn start
 ```
 
-### 4. Import Wrestler Data
-
-```bash
-# Create CSV template
-python import_csv.py create
-
-# Edit wrestlers_sample.csv with your data, then:
-python import_csv.py wrestlers_sample.csv
-```
-
-### 5. Start Server
-
-```bash
-uvicorn app.main:app --reload
-```
-
-The API will be available at `http://127.0.0.1:8000`
+The API will be available at `http://localhost:8000`
 
 ## API Usage
 
@@ -89,7 +60,7 @@ The API will be available at `http://127.0.0.1:8000`
 Sign up to get an API key:
 
 ```bash
-curl -X POST "http://127.0.0.1:8000/api/v1/signup?email=your@email.com"
+curl -X POST "http://localhost:8000/api/v1/signup?email=your@email.com"
 ```
 
 Response:
@@ -105,78 +76,115 @@ Response:
 
 ```bash
 # All wrestlers
-curl -H "x-api-key: YOUR_API_KEY" http://127.0.0.1:8000/api/v1/rankings
+curl -H "x-api-key: YOUR_API_KEY" http://localhost:8000/api/v1/rankings
 
 # Filter by weight class
-curl -H "x-api-key: YOUR_API_KEY" http://127.0.0.1:8000/api/v1/rankings?weight_class=157
+curl -H "x-api-key: YOUR_API_KEY" http://localhost:8000/api/v1/rankings?weight_class=157
 ```
 
-### Interactive Documentation
+### Get User Info
 
-Visit `http://127.0.0.1:8000/docs` for interactive API documentation (Swagger UI)
+```bash
+curl "http://localhost:8000/api/v1/user?email=your@email.com"
+```
+
+### Delete User
+
+```bash
+curl -X DELETE "http://localhost:8000/api/v1/user?email=your@email.com"
+```
 
 ## Data Management
 
 ### CSV Import (Recommended)
 
-The CSV format:
+Create a sample CSV:
+
+```bash
+node scripts/importCsv.js create
+```
+
+This creates `wrestlers_sample.csv` with the format:
 ```csv
 rank,name,school,weight_class,source
 1,Spencer Lee,Iowa,125,FloWrestling
 2,Patrick Glory,Princeton,125,FloWrestling
 ```
 
-Import command:
-```bash
-python import_csv.py your_rankings.csv
-```
-
-### Update Data Regularly
+Import your CSV:
 
 ```bash
-# 1. Update your CSV file with latest rankings
-# 2. Import the updated file
-python import_csv.py updated_rankings.csv
+node scripts/importCsv.js wrestlers.csv
 ```
 
 ### Web Scraping
 
-Basic scraper included (limited due to JS-heavy ranking sites):
+Basic scraper (using Cheerio):
 
 ```bash
-python run_scraper.py
+yarn scrape
+# or
+node scripts/runScraper.js
 ```
 
-See `SCRAPER_GUIDE.md` for details on scraping challenges and alternatives.
+Playwright scraper (for JavaScript-rendered sites):
+
+```bash
+# First, install Playwright browsers
+npx playwright install chromium
+
+# Run Playwright scraper
+node scripts/runScraper.js --playwright
+# or
+node scripts/runScraper.js -p
+```
+
+Test scraper without saving to database:
+
+```bash
+node scripts/testScraper.js
+node scripts/testScraper.js --playwright
+```
 
 ## Project Structure
 
 ```
 wrestling-api/
-├── app/
-│   ├── main.py              # FastAPI application
-│   ├── config.py            # Configuration
-│   ├── database.py          # Database setup
-│   ├── dependencies.py      # Auth & rate limiting
-│   ├── models.py            # Database models
-│   ├── routers/
-│   │   ├── rankings.py      # Rankings endpoints
-│   │   └── user.py          # User/signup endpoints
-│   └── scrappers/
-│       └── ncaa.py          # Web scraping (optional)
-├── import_csv.py            # CSV import tool
-├── run_scraper.py           # Scraper runner
-├── requirements.txt         # Dependencies
-├── .env                     # Configuration (create this)
-├── wrestling_api.db         # SQLite database (auto-created)
-└── SCRAPER_GUIDE.md         # Scraping documentation
+├── src/
+│   ├── index.js              # Express application entry
+│   ├── config.js             # Configuration
+│   ├── database.js           # Sequelize setup
+│   ├── models/
+│   │   ├── User.js           # User model
+│   │   ├── Wrestler.js       # Wrestler model
+│   │   └── APIUsage.js       # API usage tracking
+│   ├── middleware/
+│   │   └── auth.js           # Authentication & rate limiting
+│   ├── routes/
+│   │   ├── rankings.js       # Rankings endpoints
+│   │   └── user.js           # User/signup endpoints
+│   └── scrapers/
+│       ├── ncaa.js           # Basic scraper (Cheerio)
+│       └── playwright.js     # Playwright scraper
+├── scripts/
+│   ├── importCsv.js          # CSV import utility
+│   ├── runScraper.js         # Scraper runner
+│   └── testScraper.js        # Test scraper
+├── package.json              # Dependencies and scripts
+├── .env                      # Configuration (create this)
+├── wrestling_api.db          # SQLite database (auto-created)
+├── Dockerfile                # Docker configuration
+├── docker-compose.yml        # Docker Compose setup
+└── Procfile                  # Heroku/Railway deployment
 ```
 
 ## API Endpoints
 
 ### Public Endpoints
 - `GET /` - Welcome message
-- `POST /api/v1/signup` - Get API key
+- `POST /api/v1/signup?email={email}` - Get API key
+- `GET /api/v1/user?email={email}` - Get user info
+- `DELETE /api/v1/user?email={email}` - Delete user account
 
 ### Authenticated Endpoints (require x-api-key header)
 - `GET /api/v1/rankings` - Get all wrestler rankings
@@ -185,75 +193,100 @@ wrestling-api/
 ## Rate Limiting
 
 - **Free tier**: 500 requests per month
-- **Pro tier**: Unlimited (Stripe integration required)
+- **Pro/Business tier**: Unlimited (set in user.plan field)
 
-## Database Schema
+Rate limits are tracked monthly per user in the APIUsage table.
 
-### Users
-- id, email, api_key, plan (free/pro)
+## Database
 
-### Wrestlers
+### Default: SQLite
+By default, the API uses SQLite for easy local development. The database file is `wrestling_api.db`.
+
+### PostgreSQL (Production)
+For production, set the DATABASE_URL environment variable:
+
+```env
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+```
+
+### Database Schema
+
+**Users**
+- id, email (unique), api_key (unique), plan (free/pro/business)
+
+**Wrestlers**
 - id, name, school, weight_class, rank, source, last_updated
 
-### APIUsage
-- id, user_id, date, requests
+**APIUsage**
+- id, user_id (FK), date, requests (count)
 
 ## Production Deployment
+
+### Docker
+
+Build and run:
+
+```bash
+docker build -t wrestling-api .
+docker run -p 8000:8000 --env-file .env wrestling-api
+```
+
+Or use Docker Compose:
+
+```bash
+docker-compose up
+```
+
+This starts both the API and PostgreSQL database.
+
+### Heroku/Railway
+
+The project includes a `Procfile` for easy deployment to Heroku or Railway:
+
+```
+web: node src/index.js
+```
+
+Set environment variables in your platform's dashboard:
+- `DATABASE_URL` (PostgreSQL connection string)
+- `STRIPE_API_KEY` (optional)
+- `STRIPE_WEBHOOK_SECRET` (optional)
+- `PORT` (automatically set by platform)
 
 ### Environment Variables
 
 ```env
-DATABASE_URL=postgresql://user:pass@host:5432/dbname  # For PostgreSQL
+DATABASE_URL=postgresql://user:pass@host:5432/dbname
 STRIPE_API_KEY=sk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
+PORT=8000
+NODE_ENV=production
 ```
 
-### Run with Gunicorn
+## Weight Classes
 
-```bash
-pip install gunicorn
-gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker
-```
-
-### Docker (Optional)
-
-```dockerfile
-FROM python:3.9-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
+NCAA Division I weight classes:
+- 125, 133, 141, 149, 157, 165, 174, 184, 197, 285 lbs
 
 ## Data Sources
 
 Rankings can be sourced from:
 - FloWrestling: https://www.flowrestling.org/rankings
-- InterMat: https://intermatwrestle.com/rankings
-- WIN Magazine: https://www.amateurwrestlingnews.com/
-- TrackWrestling: https://www.trackwrestling.com/
+- NCAA.com: https://www.ncaa.com/rankings/wrestling/d1
+- Manual CSV import (recommended for accuracy)
 
-**Note**: Most sites require manual data collection. See `SCRAPER_GUIDE.md` for details.
+**Note**: Most wrestling ranking sites use JavaScript rendering. The Playwright scraper is recommended for automated data collection.
 
-## Maintenance
+## Scripts
 
-### Backup Database
-
-```bash
-# SQLite
-cp wrestling_api.db backup_$(date +%Y%m%d).db
-
-# PostgreSQL
-pg_dump dbname > backup_$(date +%Y%m%d).sql
-```
-
-### Update Rankings Weekly
+Available npm/yarn scripts:
 
 ```bash
-# 1. Export/update CSV from ranking sources
-# 2. Import to database
-python import_csv.py weekly_rankings.csv
+yarn start         # Start production server
+yarn dev           # Start development server with nodemon
+yarn scrape        # Run basic scraper
+yarn import        # Run CSV import utility
+yarn test          # Test scraper without saving
 ```
 
 ## Troubleshooting
@@ -263,16 +296,34 @@ python import_csv.py weekly_rankings.csv
 - Include header: `x-api-key: YOUR_KEY`
 
 ### "Free tier limit reached"
-- Wait until next month, or
-- Upgrade to pro tier (implement Stripe)
+- Wait until next month (usage resets monthly)
+- Or manually update user plan in database to 'pro'
 
 ### Empty rankings
-- Import data: `python import_csv.py wrestlers_sample.csv`
+- Import data: `node scripts/importCsv.js wrestlers_sample.csv`
+- Or run scraper: `yarn scrape`
+
+### Scraper finds no data
+- Try Playwright scraper: `node scripts/runScraper.js --playwright`
+- Or use CSV import method (most reliable)
+
+## Migration from Python
+
+This project has been converted from Python/FastAPI to Node.js/Express. Key changes:
+
+- FastAPI → Express.js
+- SQLAlchemy → Sequelize
+- BeautifulSoup → Cheerio
+- Python Playwright → Node.js Playwright
+- Uvicorn/Gunicorn → Node.js HTTP server
+- pip/requirements.txt → yarn/npm/package.json
+
+All API endpoints and functionality remain the same.
 
 ## License
 
-[Your License Here]
+MIT
 
 ## Support
 
-For issues or questions, see `SCRAPER_GUIDE.md` or open an issue.
+For issues or questions, please open an issue on the repository.
