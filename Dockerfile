@@ -17,9 +17,9 @@ RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
 # Copy application
 COPY . .
 
-# Create non-root user
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-USER appuser
+# Create non-root user (use node user that comes with the image)
+RUN chown -R node:node /app
+USER node
 
 # Expose port
 EXPOSE 8000
