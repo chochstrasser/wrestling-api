@@ -1,13 +1,24 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { v4 as uuidv4 } from 'uuid';
 import { User, APIUsage } from '../database.js';
+import { verifyApiKey } from '../middleware/auth.js';
 // import Stripe from 'stripe'; // Uncomment when integrating with Stripe
 // import { config } from '../config.js';
 
 const router = express.Router();
 
+// Rate limiter for signup endpoint to prevent abuse and enumeration attacks
+const signupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 signup requests per windowMs
+  message: { detail: 'Too many signup attempts from this IP, please try again later.' },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
 // POST /api/v1/signup - Create new user account
-router.post('/signup', async (req, res) => {
+router.post('/signup', signupLimiter, async (req, res) => {
   try {
     const { email } = req.query;
 
@@ -33,10 +44,11 @@ router.post('/signup', async (req, res) => {
     // const stripe = new Stripe(config.STRIPE_API_KEY);
     // await stripe.customers.create({ email });
 
-    res.json({
+    res.status(201).json({
       email: user.email,
       api_key: user.api_key,
-      plan: user.plan
+      plan: user.plan,
+      message: '⚠️  IMPORTANT: Save your API key securely. It will not be shown again. If lost, you must regenerate it via /api/v1/user/regenerate-key'
     });
   } catch (error) {
     console.error('Error creating user:', error);
@@ -44,20 +56,12 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// DELETE /api/v1/user - Delete user account
-router.delete('/user', async (req, res) => {
+// DELETE /api/v1/user - Delete user account (authenticated)
+router.delete('/user', verifyApiKey, async (req, res) => {
   try {
-    const { email } = req.query;
-
-    if (!email) {
-      return res.status(400).json({ detail: 'Email is required' });
-    }
-
-    // Find user
-    const user = await User.findOne({ where: { email } });
-    if (!user) {
-      return res.status(404).json({ detail: 'User not found' });
-    }
+    // Authorization: Users can only delete their own account
+    // req.user is set by verifyApiKey middleware
+    const user = req.user;
 
     // Delete associated API usage records
     await APIUsage.destroy({ where: { user_id: user.id } });
@@ -66,7 +70,7 @@ router.delete('/user', async (req, res) => {
     await user.destroy();
 
     res.json({
-      message: `User ${email} and all associated data deleted successfully`
+      message: `User ${user.email} and all associated data deleted successfully`
     });
   } catch (error) {
     console.error('Error deleting user:', error);
@@ -74,20 +78,12 @@ router.delete('/user', async (req, res) => {
   }
 });
 
-// GET /api/v1/user - Get user information
-router.get('/user', async (req, res) => {
+// GET /api/v1/user - Get user information (authenticated)
+router.get('/user', verifyApiKey, async (req, res) => {
   try {
-    const { email } = req.query;
-
-    if (!email) {
-      return res.status(400).json({ detail: 'Email is required' });
-    }
-
-    // Find user
-    const user = await User.findOne({ where: { email } });
-    if (!user) {
-      return res.status(404).json({ detail: 'User not found' });
-    }
+    // Authorization: Users can only access their own account
+    // req.user is set by verifyApiKey middleware
+    const user = req.user;
 
     // Get usage stats
     const usage = await APIUsage.findAll({ where: { user_id: user.id } });
@@ -95,12 +91,36 @@ router.get('/user', async (req, res) => {
 
     res.json({
       email: user.email,
-      api_key: user.api_key,
       plan: user.plan,
       total_requests
+      // Note: api_key is NOT returned for security
     });
   } catch (error) {
     console.error('Error fetching user:', error);
+    res.status(500).json({ detail: 'Internal server error' });
+  }
+});
+
+// POST /api/v1/user/regenerate-key - Regenerate API key (authenticated)
+router.post('/user/regenerate-key', verifyApiKey, async (req, res) => {
+  try {
+    // Authorization: User regenerates their own API key
+    // req.user is set by verifyApiKey middleware
+    const user = req.user;
+
+    // Generate new API key
+    const new_api_key = uuidv4();
+    user.api_key = new_api_key;
+    await user.save();
+
+    res.json({
+      message: 'API key regenerated successfully',
+      api_key: new_api_key,
+      email: user.email,
+      warning: '⚠️  Your old API key is now invalid. Update all applications using the old key.'
+    });
+  } catch (error) {
+    console.error('Error regenerating API key:', error);
     res.status(500).json({ detail: 'Internal server error' });
   }
 });
