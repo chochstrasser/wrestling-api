@@ -5,10 +5,13 @@
  */
 
 // Base scraper
+import { BaseScraper as BaseScraperClass } from "./base/BaseScraper.js";
 export { BaseScraper } from "./base/BaseScraper.js";
 
 // Source-specific scrapers
+import { FlowWrestlingScraper as FlowWrestlingScraperClass } from "./sources/FlowWrestlingScraper.js";
 export { FlowWrestlingScraper } from "./sources/FlowWrestlingScraper.js";
+import { NCAAOfficialScraper as NCAAOfficialScraperClass } from "./sources/NCAAOfficialScraper.js";
 export { NCAAOfficialScraper } from "./sources/NCAAOfficialScraper.js";
 
 // Configuration
@@ -50,11 +53,11 @@ export async function createScraper(source, options = {}) {
   switch (normalizedSource) {
     case "flowrestling":
     case "flow":
-      return new FlowWrestlingScraper(options);
+      return new FlowWrestlingScraperClass(options);
 
     case "ncaa":
     case "ncaa-official":
-      return new NCAAOfficialScraper(options);
+      return new NCAAOfficialScraperClass(options);
 
     case "ncaa-legacy":
       const { NCAAScraper } = await import("./ncaa.js");
@@ -135,9 +138,9 @@ export async function getRankingsByWeight(weightClass, options = {}) {
 }
 
 export default {
-  BaseScraper,
-  FlowWrestlingScraper,
-  NCAAOfficialScraper,
+  BaseScraper: BaseScraperClass,
+  FlowWrestlingScraper: FlowWrestlingScraperClass,
+  NCAAOfficialScraper: NCAAOfficialScraperClass,
   NCAAScraper,
   PlaywrightScraper,
   createScraper,
