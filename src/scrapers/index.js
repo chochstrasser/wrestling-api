@@ -4,18 +4,56 @@
  * This file provides a clean interface for accessing all wrestling scrapers.
  */
 
-// Base scraper
-import { BaseScraper as BaseScraperClass } from "./base/BaseScraper.js";
-export { BaseScraper } from "./base/BaseScraper.js";
+// Import base utilities for default export
+import {
+  createAxiosInstance,
+  fetchStatic,
+  fetchDynamic,
+  createBrowser,
+  fetchDynamicWithBrowser,
+  delay,
+  normalizeWrestler
+} from "./base/BaseScraper.js";
 
-// Source-specific scrapers
-import { FlowWrestlingScraper as FlowWrestlingScraperClass } from "./sources/FlowWrestlingScraper.js";
-export { FlowWrestlingScraper } from "./sources/FlowWrestlingScraper.js";
-import { NCAAOfficialScraper as NCAAOfficialScraperClass } from "./sources/NCAAOfficialScraper.js";
-export { NCAAOfficialScraper } from "./sources/NCAAOfficialScraper.js";
-
-// Configuration
+// Base scraper utilities (functional exports)
 export {
+  createAxiosInstance,
+  fetchStatic,
+  fetchDynamic,
+  createBrowser,
+  fetchDynamicWithBrowser,
+  delay,
+  normalizeWrestler
+};
+
+// Base scraper utilities re-exported for convenience
+export { default as BaseScraper } from "./base/BaseScraper.js";
+
+// Import source-specific scrapers for default export
+import {
+  fetchRankings as fetchFlowWrestlingRankings,
+  fetchRankingsByWeight as fetchFlowWrestlingRankingsByWeight
+} from "./sources/FlowWrestlingScraper.js";
+
+import {
+  fetchRankings as fetchNCAAOfficialRankings,
+  fetchRankingsByWeight as fetchNCAAOfficialRankingsByWeight
+} from "./sources/NCAAOfficialScraper.js";
+
+// Source-specific scrapers (functional exports)
+export {
+  fetchFlowWrestlingRankings,
+  fetchFlowWrestlingRankingsByWeight,
+  fetchNCAAOfficialRankings,
+  fetchNCAAOfficialRankingsByWeight
+};
+
+// Source-specific scrapers re-exported for convenience
+export { default as FlowWrestlingScraper } from "./sources/FlowWrestlingScraper.js";
+export { default as NCAAOfficialScraper } from "./sources/NCAAOfficialScraper.js";
+
+// Import configuration for default export
+import {
   WEIGHT_CLASSES,
   FLOWRESTLING_RANKINGS,
   NCAA_RANKINGS,
@@ -24,16 +62,23 @@ export {
   getAvailableEditions,
 } from "./config/rankings.js";
 
-// Legacy exports for backward compatibility
-export { NCAAScraper } from "./ncaa.js";
-export { PlaywrightScraper } from "./playwright.js";
+// Configuration exports
+export {
+  WEIGHT_CLASSES,
+  FLOWRESTLING_RANKINGS,
+  NCAA_RANKINGS,
+  DEFAULT_FLOWRESTLING_EDITION,
+  getFlowrestlingEdition,
+  getAvailableEditions,
+};
+
 
 /**
- * Factory function to create a scraper instance
+ * Factory function to create a scraper wrapper
  *
- * @param {string} source - Source name ('flowrestling', 'ncaa', 'ncaa-legacy', 'playwright-legacy')
+ * @param {string} source - Source name ('flowrestling', 'ncaa')
  * @param {object} options - Scraper options
- * @returns {BaseScraper} Scraper instance
+ * @returns {Object} Scraper object with fetchRankings and fetchRankingsByWeight methods
  *
  * @example
  * // Create FlowWrestling scraper with current edition
@@ -47,29 +92,29 @@ export { PlaywrightScraper } from "./playwright.js";
  * // Create FlowWrestling scraper with Playwright enabled
  * const scraper = createScraper('flowrestling', { usePlaywright: true });
  */
-export async function createScraper(source, options = {}) {
+export function createScraper(source, options = {}) {
   const normalizedSource = source.toLowerCase();
 
   switch (normalizedSource) {
     case "flowrestling":
     case "flow":
-      return new FlowWrestlingScraperClass(options);
+      return {
+        fetchRankings: () => fetchFlowWrestlingRankings(options),
+        fetchRankingsByWeight: (weightClass) => fetchFlowWrestlingRankingsByWeight(weightClass, options),
+        close: async () => {} // No-op for compatibility
+      };
 
     case "ncaa":
     case "ncaa-official":
-      return new NCAAOfficialScraperClass(options);
-
-    case "ncaa-legacy":
-      const { NCAAScraper } = await import("./ncaa.js");
-      return new NCAAScraper();
-
-    case "playwright-legacy":
-      const { PlaywrightScraper } = await import("./playwright.js");
-      return new PlaywrightScraper();
+      return {
+        fetchRankings: fetchNCAAOfficialRankings,
+        fetchRankingsByWeight: fetchNCAAOfficialRankingsByWeight,
+        close: async () => {} // No-op for compatibility
+      };
 
     default:
       throw new Error(
-        `Unknown scraper source: ${source}. Available: flowrestling, ncaa, ncaa-legacy, playwright-legacy`
+        `Unknown scraper source: ${source}. Available: flowrestling, ncaa`
       );
   }
 }
@@ -138,11 +183,22 @@ export async function getRankingsByWeight(weightClass, options = {}) {
 }
 
 export default {
-  BaseScraper: BaseScraperClass,
-  FlowWrestlingScraper: FlowWrestlingScraperClass,
-  NCAAOfficialScraper: NCAAOfficialScraperClass,
-  NCAAScraper,
-  PlaywrightScraper,
+  // Utility functions
+  createAxiosInstance,
+  fetchStatic,
+  fetchDynamic,
+  createBrowser,
+  fetchDynamicWithBrowser,
+  delay,
+  normalizeWrestler,
+
+  // Scraper functions
+  fetchFlowWrestlingRankings,
+  fetchFlowWrestlingRankingsByWeight,
+  fetchNCAAOfficialRankings,
+  fetchNCAAOfficialRankingsByWeight,
+
+  // Factory and helper functions
   createScraper,
   getAllRankings,
   getRankingsByWeight,

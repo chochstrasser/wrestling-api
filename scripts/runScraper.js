@@ -97,7 +97,7 @@ function showHelp() {
   console.log("Usage: node scripts/runScraper.js [options]");
   console.log("\nOptions:");
   console.log("  -p, --playwright       Use Playwright for JavaScript-rendered pages");
-  console.log("  -s, --source <name>    Source to scrape (flowrestling, ncaa, ncaa-legacy, playwright-legacy)");
+  console.log("  -s, --source <name>    Source to scrape (flowrestling, ncaa)");
   console.log("  -e, --edition <name>   Edition to scrape (current, edition-54317, etc.)");
   console.log("  --list-editions        List all available editions");
   console.log("  -h, --help             Show this help message");

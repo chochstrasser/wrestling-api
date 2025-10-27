@@ -1,13 +1,13 @@
 /**
  * Test the scraper without adding to database
  */
-import { createScraper, getAvailableEditions } from '../src/scrapers/index.js';
+import { createScraper, getAvailableEditions } from "../src/scrapers/index.js";
 
 async function testScraper(options = {}) {
   const {
     usePlaywright = false,
-    source = 'flowrestling',
-    edition = 'current'
+    source = "flowrestling",
+    edition = "current",
   } = options;
 
   const scraperType = usePlaywright ? "Playwright" : "Static";
@@ -19,7 +19,7 @@ async function testScraper(options = {}) {
   try {
     scraper = createScraper(source, {
       usePlaywright,
-      edition
+      edition,
     });
   } catch (error) {
     console.log(`❌ Error creating scraper: ${error.message}`);
@@ -44,22 +44,24 @@ async function testScraper(options = {}) {
     console.log("-".repeat(60));
 
     const byWeight = {};
-    rankings.forEach(w => {
+    rankings.forEach((w) => {
       if (!byWeight[w.weight_class]) {
         byWeight[w.weight_class] = [];
       }
       byWeight[w.weight_class].push(w);
     });
 
-    Object.keys(byWeight).sort((a, b) => parseInt(a) - parseInt(b)).forEach(weight => {
-      console.log(`\n${weight}lbs:`);
-      byWeight[weight].slice(0, 10).forEach(w => {
-        console.log(`  ${w.rank}. ${w.name} (${w.school}) - ${w.source}`);
+    Object.keys(byWeight)
+      .sort((a, b) => parseInt(a) - parseInt(b))
+      .forEach((weight) => {
+        console.log(`\n${weight}lbs:`);
+        byWeight[weight].slice(0, 10).forEach((w) => {
+          console.log(`  ${w.rank}. ${w.name} (${w.school}) - ${w.source}`);
+        });
+        if (byWeight[weight].length > 10) {
+          console.log(`  ... and ${byWeight[weight].length - 10} more`);
+        }
       });
-      if (byWeight[weight].length > 10) {
-        console.log(`  ... and ${byWeight[weight].length - 10} more`);
-      }
-    });
 
     console.log("\n" + "=".repeat(60));
     console.log(`Total wrestlers found: ${rankings.length}`);
@@ -77,49 +79,59 @@ async function testScraper(options = {}) {
 function showHelp() {
   console.log("Usage: node scripts/testScraper.js [options]");
   console.log("\nOptions:");
-  console.log("  -p, --playwright       Use Playwright for JavaScript-rendered pages");
-  console.log("  -s, --source <name>    Source to scrape (flowrestling, ncaa, ncaa-legacy, playwright-legacy)");
-  console.log("  -e, --edition <name>   Edition to scrape (current, edition-54317, etc.)");
+  console.log(
+    "  -p, --playwright       Use Playwright for JavaScript-rendered pages"
+  );
+  console.log(
+    "  -s, --source <name>    Source to scrape (flowrestling, ncaa)"
+  );
+  console.log(
+    "  -e, --edition <name>   Edition to scrape (current, edition-54317, etc.)"
+  );
   console.log("  --list-editions        List all available editions");
   console.log("  -h, --help             Show this help message");
   console.log("\nExamples:");
   console.log("  node scripts/testScraper.js");
   console.log("  node scripts/testScraper.js --playwright");
-  console.log("  node scripts/testScraper.js --source flowrestling --edition edition-54317");
+  console.log(
+    "  node scripts/testScraper.js --source flowrestling --edition edition-54317"
+  );
   console.log("  node scripts/testScraper.js --source ncaa");
 }
 
 // Parse command line arguments
 const args = process.argv.slice(2);
 
-if (args.includes('-h') || args.includes('--help')) {
+if (args.includes("-h") || args.includes("--help")) {
   showHelp();
   process.exit(0);
 }
 
-if (args.includes('--list-editions')) {
+if (args.includes("--list-editions")) {
   console.log("Available FloWrestling editions:");
   const editions = getAvailableEditions();
-  editions.forEach(edition => {
+  editions.forEach((edition) => {
     console.log(`  ${edition.key}: ${edition.name}`);
   });
   process.exit(0);
 }
 
 const options = {
-  usePlaywright: args.includes('--playwright') || args.includes('-p'),
-  source: 'flowrestling',
-  edition: 'current'
+  usePlaywright: args.includes("--playwright") || args.includes("-p"),
+  source: "flowrestling",
+  edition: "current",
 };
 
 // Parse source
-const sourceIndex = args.findIndex(arg => arg === '-s' || arg === '--source');
+const sourceIndex = args.findIndex((arg) => arg === "-s" || arg === "--source");
 if (sourceIndex !== -1 && args[sourceIndex + 1]) {
   options.source = args[sourceIndex + 1];
 }
 
 // Parse edition
-const editionIndex = args.findIndex(arg => arg === '-e' || arg === '--edition');
+const editionIndex = args.findIndex(
+  (arg) => arg === "-e" || arg === "--edition"
+);
 if (editionIndex !== -1 && args[editionIndex + 1]) {
   options.edition = args[editionIndex + 1];
 }

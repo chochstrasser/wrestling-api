@@ -105,7 +105,7 @@ router.get('/scraper/status', verifyApiKey, async (req, res) => {
       weightClassesAvailable: weightClasses.map(w => w.weight_class),
       playwrightAvailable: true,
       availableEditions,
-      supportedSources: ['flowrestling', 'ncaa', 'ncaa-legacy', 'playwright-legacy']
+      supportedSources: ['flowrestling', 'ncaa']
     });
   } catch (error) {
     console.error('Error checking scraper status:', error);
