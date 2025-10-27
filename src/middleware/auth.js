@@ -4,10 +4,11 @@ import { Op } from 'sequelize';
 
 export async function verifyApiKey(req, res, next) {
   try {
-    const apiKey = req.headers['x-api-key'];
+    // Accept API key from header or query parameter (for browser convenience)
+    const apiKey = req.headers['x-api-key'] || req.query.api_key;
 
     if (!apiKey) {
-      return res.status(401).json({ detail: 'API key required' });
+      return res.status(401).json({ detail: 'API key required. Provide via x-api-key header or api_key query parameter' });
     }
 
     // Find user by API key
