@@ -5,11 +5,11 @@
  */
 
 // Base scraper
-export { BaseScraper } from './base/BaseScraper.js';
+export { BaseScraper } from "./base/BaseScraper.js";
 
 // Source-specific scrapers
-export { FlowWrestlingScraper } from './sources/FlowWrestlingScraper.js';
-export { NCAAOfficialScraper } from './sources/NCAAOfficialScraper.js';
+export { FlowWrestlingScraper } from "./sources/FlowWrestlingScraper.js";
+export { NCAAOfficialScraper } from "./sources/NCAAOfficialScraper.js";
 
 // Configuration
 export {
@@ -18,12 +18,12 @@ export {
   NCAA_RANKINGS,
   DEFAULT_FLOWRESTLING_EDITION,
   getFlowrestlingEdition,
-  getAvailableEditions
-} from './config/rankings.js';
+  getAvailableEditions,
+} from "./config/rankings.js";
 
 // Legacy exports for backward compatibility
-export { NCAAScraper } from './ncaa.js';
-export { PlaywrightScraper } from './playwright.js';
+export { NCAAScraper } from "./ncaa.js";
+export { PlaywrightScraper } from "./playwright.js";
 
 /**
  * Factory function to create a scraper instance
@@ -44,28 +44,30 @@ export { PlaywrightScraper } from './playwright.js';
  * // Create FlowWrestling scraper with Playwright enabled
  * const scraper = createScraper('flowrestling', { usePlaywright: true });
  */
-export function createScraper(source, options = {}) {
+export async function createScraper(source, options = {}) {
   const normalizedSource = source.toLowerCase();
 
   switch (normalizedSource) {
-    case 'flowrestling':
-    case 'flow':
+    case "flowrestling":
+    case "flow":
       return new FlowWrestlingScraper(options);
 
-    case 'ncaa':
-    case 'ncaa-official':
+    case "ncaa":
+    case "ncaa-official":
       return new NCAAOfficialScraper(options);
 
-    case 'ncaa-legacy':
-      const { NCAAScraper } = await import('./ncaa.js');
+    case "ncaa-legacy":
+      const { NCAAScraper } = await import("./ncaa.js");
       return new NCAAScraper();
 
-    case 'playwright-legacy':
-      const { PlaywrightScraper } = await import('./playwright.js');
+    case "playwright-legacy":
+      const { PlaywrightScraper } = await import("./playwright.js");
       return new PlaywrightScraper();
 
     default:
-      throw new Error(`Unknown scraper source: ${source}. Available: flowrestling, ncaa, ncaa-legacy, playwright-legacy`);
+      throw new Error(
+        `Unknown scraper source: ${source}. Available: flowrestling, ncaa, ncaa-legacy, playwright-legacy`
+      );
   }
 }
 
@@ -80,7 +82,7 @@ export function createScraper(source, options = {}) {
  */
 export async function getAllRankings(options = {}) {
   const results = [];
-  const sources = options.sources || ['flowrestling', 'ncaa'];
+  const sources = options.sources || ["flowrestling", "ncaa"];
 
   for (const source of sources) {
     try {
@@ -111,7 +113,7 @@ export async function getAllRankings(options = {}) {
  */
 export async function getRankingsByWeight(weightClass, options = {}) {
   const results = [];
-  const sources = options.sources || ['flowrestling', 'ncaa'];
+  const sources = options.sources || ["flowrestling", "ncaa"];
 
   for (const source of sources) {
     try {
@@ -123,7 +125,9 @@ export async function getRankingsByWeight(weightClass, options = {}) {
         await scraper.close();
       }
     } catch (error) {
-      console.error(`Error fetching ${weightClass}lbs from ${source}: ${error.message}`);
+      console.error(
+        `Error fetching ${weightClass}lbs from ${source}: ${error.message}`
+      );
     }
   }
 
@@ -139,5 +143,5 @@ export default {
   createScraper,
   getAllRankings,
   getRankingsByWeight,
-  getAvailableEditions
+  getAvailableEditions,
 };
