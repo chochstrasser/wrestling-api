@@ -61,7 +61,10 @@ export async function initDatabase() {
 
     await sequelize.authenticate();
     console.log('Database connection established successfully.');
-    await sequelize.sync();
+
+    // Only sync tables, never drop existing data
+    // In production, this only creates missing tables/columns
+    await sequelize.sync({ alter: false, force: false });
     console.log('Database synchronized.');
   } catch (error) {
     console.error('Unable to connect to the database:', error);
