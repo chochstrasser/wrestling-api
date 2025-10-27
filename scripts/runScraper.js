@@ -1,28 +1,33 @@
 /**
  * Script to run the NCAA scraper and populate the database
  */
-import { NCAAScraper } from '../src/scrapers/ncaa.js';
-import { PlaywrightScraper } from '../src/scrapers/playwright.js';
+import { createScraper, getAvailableEditions } from '../src/scrapers/index.js';
 import { initDatabase, Wrestler } from '../src/database.js';
 
-async function runScraper(usePlaywright = false) {
-  const scraperType = usePlaywright ? "Playwright" : "Basic";
-  console.log(`Starting NCAA Wrestling Scraper (${scraperType})...`);
+async function runScraper(options = {}) {
+  const {
+    usePlaywright = false,
+    source = 'flowrestling',
+    edition = 'current'
+  } = options;
+
+  const scraperType = usePlaywright ? "Playwright" : "Static";
+  console.log(`Starting Wrestling Scraper (${scraperType})...`);
+  console.log(`Source: ${source}, Edition: ${edition}`);
   console.log("=".repeat(60));
 
   let scraper;
-  if (usePlaywright) {
-    try {
-      scraper = new PlaywrightScraper();
-    } catch (error) {
-      console.log("❌ Playwright not installed!");
-      console.log("\nTo use Playwright scraper, run:");
-      console.log("  yarn add playwright");
-      console.log("  npx playwright install chromium");
-      return;
-    }
-  } else {
-    scraper = new NCAAScraper();
+  try {
+    scraper = createScraper(source, {
+      usePlaywright,
+      edition
+    });
+  } catch (error) {
+    console.log(`❌ Error creating scraper: ${error.message}`);
+    console.log("\nTo use Playwright scraper, run:");
+    console.log("  yarn add playwright");
+    console.log("  npx playwright install chromium");
+    return;
   }
 
   try {
@@ -77,17 +82,65 @@ async function runScraper(usePlaywright = false) {
     // Verify
     const finalCount = await Wrestler.count();
     console.log(`Total wrestlers in database: ${finalCount}`);
-
-    process.exit(0);
   } catch (error) {
     console.error(`❌ Error: ${error.message}`);
     console.error(error.stack);
-    process.exit(1);
+  } finally {
+    if (scraper && scraper.close) {
+      await scraper.close();
+    }
   }
+}
+
+// Show available options
+function showHelp() {
+  console.log("Usage: node scripts/runScraper.js [options]");
+  console.log("\nOptions:");
+  console.log("  -p, --playwright       Use Playwright for JavaScript-rendered pages");
+  console.log("  -s, --source <name>    Source to scrape (flowrestling, ncaa, ncaa-legacy, playwright-legacy)");
+  console.log("  -e, --edition <name>   Edition to scrape (current, edition-54317, etc.)");
+  console.log("  --list-editions        List all available editions");
+  console.log("  -h, --help             Show this help message");
+  console.log("\nExamples:");
+  console.log("  node scripts/runScraper.js");
+  console.log("  node scripts/runScraper.js --playwright");
+  console.log("  node scripts/runScraper.js --source flowrestling --edition edition-54317");
+  console.log("  node scripts/runScraper.js --source ncaa");
 }
 
 // Parse command line arguments
 const args = process.argv.slice(2);
-const usePlaywright = args.includes('--playwright') || args.includes('-p');
 
-runScraper(usePlaywright);
+if (args.includes('-h') || args.includes('--help')) {
+  showHelp();
+  process.exit(0);
+}
+
+if (args.includes('--list-editions')) {
+  console.log("Available FloWrestling editions:");
+  const editions = getAvailableEditions();
+  editions.forEach(edition => {
+    console.log(`  ${edition.key}: ${edition.name}`);
+  });
+  process.exit(0);
+}
+
+const options = {
+  usePlaywright: args.includes('--playwright') || args.includes('-p'),
+  source: 'flowrestling',
+  edition: 'current'
+};
+
+// Parse source
+const sourceIndex = args.findIndex(arg => arg === '-s' || arg === '--source');
+if (sourceIndex !== -1 && args[sourceIndex + 1]) {
+  options.source = args[sourceIndex + 1];
+}
+
+// Parse edition
+const editionIndex = args.findIndex(arg => arg === '-e' || arg === '--edition');
+if (editionIndex !== -1 && args[editionIndex + 1]) {
+  options.edition = args[editionIndex + 1];
+}
+
+runScraper(options);
