@@ -31,7 +31,14 @@ export default (sequelize) => {
     tableName: 'wrestlers',
     timestamps: false,
     indexes: [
-      { fields: ['name'] }
+      {
+        fields: ['name', 'weight_class', 'source'],
+        unique: true,
+        name: 'unique_wrestler_per_source'
+      },
+      { fields: ['name'] },
+      { fields: ['weight_class'] },
+      { fields: ['source'] }
     ]
   });
 

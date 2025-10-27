@@ -66,6 +66,28 @@ export async function initDatabase() {
     // In production, this only creates missing tables/columns
     await sequelize.sync({ alter: false, force: false });
     console.log('Database synchronized.');
+
+    // Ensure unique constraint exists for upsert operations
+    // This handles adding the constraint to existing databases
+    try {
+      const queryInterface = sequelize.getQueryInterface();
+
+      // Check if we need to add the unique constraint
+      const indexes = await queryInterface.showIndex('wrestlers');
+      const hasUniqueConstraint = indexes.some(idx => idx.name === 'unique_wrestler_per_source');
+
+      if (!hasUniqueConstraint) {
+        console.log('Adding unique constraint for upsert functionality...');
+        await queryInterface.addIndex('wrestlers', ['name', 'weight_class', 'source'], {
+          unique: true,
+          name: 'unique_wrestler_per_source'
+        });
+        console.log('Unique constraint added successfully.');
+      }
+    } catch (error) {
+      // Constraint might already exist or not needed
+      console.log('Unique constraint check:', error.message);
+    }
   } catch (error) {
     console.error('Unable to connect to the database:', error);
     throw error;
