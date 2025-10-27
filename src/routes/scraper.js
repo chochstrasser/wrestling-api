@@ -1,6 +1,5 @@
 import express from 'express';
-import { PlaywrightScraper } from '../scrapers/playwright.js';
-import { NCAAScraper } from '../scrapers/ncaa.js';
+import { createScraper, getAvailableEditions } from '../scrapers/index.js';
 import { Wrestler } from '../database.js';
 import { verifyApiKey } from '../middleware/auth.js';
 
@@ -9,21 +8,22 @@ const router = express.Router();
 // POST /api/v1/scraper/run - Trigger the scraper to populate database
 router.post('/scraper/run', verifyApiKey, async (req, res) => {
   try {
-    const { usePlaywright = true, clearExisting = true } = req.body;
+    const {
+      usePlaywright = true,
+      clearExisting = true,
+      source = 'flowrestling',
+      edition = 'current'
+    } = req.body;
 
-    console.log(`Starting scraper (Playwright: ${usePlaywright})...`);
+    console.log(`Starting scraper (source: ${source}, edition: ${edition}, Playwright: ${usePlaywright})...`);
 
-    // Choose scraper based on request
-    let scraper;
-    let scraperType;
+    // Create scraper based on request
+    const scraper = createScraper(source, {
+      usePlaywright,
+      edition
+    });
 
-    if (usePlaywright) {
-      scraper = new PlaywrightScraper();
-      scraperType = 'Playwright';
-    } else {
-      scraper = new NCAAScraper();
-      scraperType = 'Basic';
-    }
+    const scraperType = usePlaywright ? 'Playwright' : 'Static';
 
     // Fetch rankings
     const rankings = await scraper.fetchRankings();
@@ -65,6 +65,8 @@ router.post('/scraper/run', verifyApiKey, async (req, res) => {
       success: true,
       message: 'Scraper completed successfully',
       scraperType,
+      source,
+      edition,
       rankingsFound: rankings.length,
       recordsAdded: wrestlersToAdd.length,
       totalInDatabase: finalCount,
@@ -89,11 +91,15 @@ router.get('/scraper/status', verifyApiKey, async (req, res) => {
       group: ['weight_class']
     });
 
+    const availableEditions = getAvailableEditions();
+
     res.json({
       databasePopulated: wrestlerCount > 0,
       totalWrestlers: wrestlerCount,
       weightClassesAvailable: weightClasses.map(w => w.weight_class),
-      playwrightAvailable: true // Will be true if dependencies are installed
+      playwrightAvailable: true,
+      availableEditions,
+      supportedSources: ['flowrestling', 'ncaa', 'ncaa-legacy', 'playwright-legacy']
     });
   } catch (error) {
     console.error('Error checking scraper status:', error);
