@@ -54,6 +54,7 @@ router.post('/scraper/run', verifyApiKey, async (req, res) => {
       school: item.school || 'Unknown',
       weight_class: item.weight_class || 'Unknown',
       rank: item.rank || 0,
+      grade: item.grade || null,
       source: item.source || 'NCAA',
       last_updated: new Date()
     }));
@@ -61,7 +62,7 @@ router.post('/scraper/run', verifyApiKey, async (req, res) => {
     // Use bulkCreate with updateOnDuplicate to handle duplicates
     // This will update existing records if they match on the unique constraint (name, weight_class, source)
     await Wrestler.bulkCreate(wrestlersToAdd, {
-      updateOnDuplicate: ['school', 'rank', 'last_updated'],
+      updateOnDuplicate: ['school', 'rank', 'grade', 'last_updated'],
       ignoreDuplicates: false
     });
 
