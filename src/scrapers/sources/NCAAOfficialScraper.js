@@ -72,11 +72,12 @@ function parseRankings($) {
 
       if (cols.length >= 3) {
         try {
-          // Typical NCAA table structure: Rank | Name | School | Weight (optional)
+          // Typical NCAA table structure: Rank | Name | School | Weight | Grade (optional)
           const rankText = $(cols[0]).text().trim();
           const name = $(cols[1]).text().trim();
           const school = cols.length > 2 ? $(cols[2]).text().trim() : 'Unknown';
           const weight = cols.length > 3 ? $(cols[3]).text().trim() : 'Unknown';
+          const grade = cols.length > 4 ? $(cols[4]).text().trim() : null;
 
           // Skip header rows
           if (rankText.toLowerCase() === 'rank' || name.toLowerCase() === 'name') {
@@ -88,12 +89,30 @@ function parseRankings($) {
             return;
           }
 
+          // Normalize grade to match enum values (FR, SO, JR, SR)
+          let normalizedGrade = null;
+          if (grade) {
+            const gradeUpper = grade.toUpperCase();
+            if (['FR', 'SO', 'JR', 'SR'].includes(gradeUpper)) {
+              normalizedGrade = gradeUpper;
+            } else if (gradeUpper.includes('FR')) {
+              normalizedGrade = 'FR';
+            } else if (gradeUpper.includes('SO')) {
+              normalizedGrade = 'SO';
+            } else if (gradeUpper.includes('JR')) {
+              normalizedGrade = 'JR';
+            } else if (gradeUpper.includes('SR')) {
+              normalizedGrade = 'SR';
+            }
+          }
+
           wrestlers.push(normalizeWrestler({
             rank,
             name,
             school,
             weight_class: normalizeWeightClass(weight),
-            source: 'NCAA.com'
+            source: 'NCAA.com',
+            grade: normalizedGrade
           }));
         } catch (error) {
           // Skip invalid rows

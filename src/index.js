@@ -2,6 +2,7 @@ import express from 'express';
 import { config } from './config.js';
 import { initDatabase } from './database.js';
 import rankingsRouter from './routes/rankings.js';
+import wrestlersRouter from './routes/wrestlers.js';
 import userRouter from './routes/user.js';
 import scraperRouter from './routes/scraper.js';
 
@@ -22,6 +23,7 @@ app.get('/', (req, res) => {
 
 // Routes
 app.use('/api/v1', rankingsRouter);
+app.use('/api/v1', wrestlersRouter);
 app.use('/api/v1', userRouter);
 app.use('/api/v1', scraperRouter);
 

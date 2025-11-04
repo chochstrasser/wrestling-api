@@ -6,27 +6,24 @@ import { initDatabase, Wrestler } from '../src/database.js';
 
 async function runScraper(options = {}) {
   const {
-    usePlaywright = false,
     source = 'flowrestling',
     edition = 'current'
   } = options;
 
-  const scraperType = usePlaywright ? "Playwright" : "Static";
-  console.log(`Starting Wrestling Scraper (${scraperType})...`);
+  console.log(`Starting Wrestling Scraper...`);
   console.log(`Source: ${source}, Edition: ${edition}`);
   console.log("=".repeat(60));
 
   let scraper;
   try {
     scraper = createScraper(source, {
-      usePlaywright,
+      usePlaywright: true,
       edition
     });
   } catch (error) {
     console.log(`❌ Error creating scraper: ${error.message}`);
-    console.log("\nTo use Playwright scraper, run:");
-    console.log("  yarn add playwright");
-    console.log("  npx playwright install chromium");
+    console.log("\nTo use the scraper, ensure Playwright is installed:");
+    console.log("  yarn playwright install chromium");
     return;
   }
 
@@ -39,11 +36,9 @@ async function runScraper(options = {}) {
 
     if (rankings.length === 0) {
       console.log("⚠️  No rankings found from any source.");
-      console.log("This is expected if the websites are using JavaScript rendering.");
       console.log("\nOptions:");
-      console.log("1. Use the Playwright scraper: node scripts/runScraper.js --playwright");
-      console.log("2. Import from CSV: node scripts/importCsv.js create");
-      console.log("3. Manually add data via the API");
+      console.log("1. Import from CSV: node scripts/importCsv.js create");
+      console.log("2. Manually add data via the API");
       return;
     }
 
@@ -73,6 +68,7 @@ async function runScraper(options = {}) {
       school: item.school || 'Unknown',
       weight_class: item.weight_class || 'Unknown',
       rank: item.rank || 0,
+      grade: item.grade || null,
       source: item.source || 'NCAA'
     }));
 
@@ -96,14 +92,12 @@ async function runScraper(options = {}) {
 function showHelp() {
   console.log("Usage: node scripts/runScraper.js [options]");
   console.log("\nOptions:");
-  console.log("  -p, --playwright       Use Playwright for JavaScript-rendered pages");
   console.log("  -s, --source <name>    Source to scrape (flowrestling, ncaa)");
   console.log("  -e, --edition <name>   Edition to scrape (current, edition-54317, etc.)");
   console.log("  --list-editions        List all available editions");
   console.log("  -h, --help             Show this help message");
   console.log("\nExamples:");
   console.log("  node scripts/runScraper.js");
-  console.log("  node scripts/runScraper.js --playwright");
   console.log("  node scripts/runScraper.js --source flowrestling --edition edition-54317");
   console.log("  node scripts/runScraper.js --source ncaa");
 }
@@ -126,7 +120,6 @@ if (args.includes('--list-editions')) {
 }
 
 const options = {
-  usePlaywright: args.includes('--playwright') || args.includes('-p'),
   source: 'flowrestling',
   edition: 'current'
 };

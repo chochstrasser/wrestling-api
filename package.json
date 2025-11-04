@@ -9,8 +9,7 @@
     "dev": "nodemon src/index.js",
     "scrape": "node scripts/runScraper.js",
     "import": "node scripts/importCsv.js",
-    "test": "node scripts/testScraper.js",
-    "migrate:grade": "node scripts/addGradeColumn.js"
+    "test": "node scripts/testScraper.js"
   },
   "keywords": [
     "wrestling",
