@@ -20,6 +20,10 @@ export default (sequelize) => {
     rank: {
       type: DataTypes.INTEGER
     },
+    grade: {
+      type: DataTypes.ENUM('FR', 'SO', 'JR', 'SR'),
+      allowNull: true
+    },
     source: {
       type: DataTypes.STRING
     },
