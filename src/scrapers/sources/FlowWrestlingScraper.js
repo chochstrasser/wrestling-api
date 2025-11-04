@@ -49,13 +49,30 @@ function parseRankingTable(container, $, weightClass, edition) {
           return;
         }
 
+        // Normalize grade to match enum values (FR, SO, JR, SR)
+        let normalizedGrade = null;
+        if (grade) {
+          const gradeUpper = grade.toUpperCase();
+          if (['FR', 'SO', 'JR', 'SR'].includes(gradeUpper)) {
+            normalizedGrade = gradeUpper;
+          } else if (gradeUpper.includes('FR')) {
+            normalizedGrade = 'FR';
+          } else if (gradeUpper.includes('SO')) {
+            normalizedGrade = 'SO';
+          } else if (gradeUpper.includes('JR')) {
+            normalizedGrade = 'JR';
+          } else if (gradeUpper.includes('SR')) {
+            normalizedGrade = 'SR';
+          }
+        }
+
         wrestlers.push(normalizeWrestler({
           rank,
           name,
           school,
           weight_class: weightClass,
           source: `FloWrestling (${edition})`,
-          grade,
+          grade: normalizedGrade,
           previous_rank: previous
         }));
       } catch (error) {

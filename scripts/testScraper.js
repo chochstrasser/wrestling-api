@@ -5,27 +5,24 @@ import { createScraper, getAvailableEditions } from "../src/scrapers/index.js";
 
 async function testScraper(options = {}) {
   const {
-    usePlaywright = false,
     source = "flowrestling",
     edition = "current",
   } = options;
 
-  const scraperType = usePlaywright ? "Playwright" : "Static";
-  console.log(`Testing Wrestling Scraper (${scraperType})...`);
+  console.log(`Testing Wrestling Scraper...`);
   console.log(`Source: ${source}, Edition: ${edition}`);
   console.log("=".repeat(60));
 
   let scraper;
   try {
     scraper = createScraper(source, {
-      usePlaywright,
+      usePlaywright: true,
       edition,
     });
   } catch (error) {
     console.log(`❌ Error creating scraper: ${error.message}`);
-    console.log("\nTo use Playwright scraper, run:");
-    console.log("  yarn add playwright");
-    console.log("  npx playwright install chromium");
+    console.log("\nTo use the scraper, ensure Playwright is installed:");
+    console.log("  yarn playwright install chromium");
     return;
   }
 
@@ -56,7 +53,8 @@ async function testScraper(options = {}) {
       .forEach((weight) => {
         console.log(`\n${weight}lbs:`);
         byWeight[weight].slice(0, 10).forEach((w) => {
-          console.log(`  ${w.rank}. ${w.name} (${w.school}) - ${w.source}`);
+          const gradeInfo = w.grade ? ` [${w.grade}]` : '';
+          console.log(`  ${w.rank}. ${w.name} (${w.school})${gradeInfo} - ${w.source}`);
         });
         if (byWeight[weight].length > 10) {
           console.log(`  ... and ${byWeight[weight].length - 10} more`);
@@ -80,9 +78,6 @@ function showHelp() {
   console.log("Usage: node scripts/testScraper.js [options]");
   console.log("\nOptions:");
   console.log(
-    "  -p, --playwright       Use Playwright for JavaScript-rendered pages"
-  );
-  console.log(
     "  -s, --source <name>    Source to scrape (flowrestling, ncaa)"
   );
   console.log(
@@ -92,7 +87,6 @@ function showHelp() {
   console.log("  -h, --help             Show this help message");
   console.log("\nExamples:");
   console.log("  node scripts/testScraper.js");
-  console.log("  node scripts/testScraper.js --playwright");
   console.log(
     "  node scripts/testScraper.js --source flowrestling --edition edition-54317"
   );
@@ -117,7 +111,6 @@ if (args.includes("--list-editions")) {
 }
 
 const options = {
-  usePlaywright: args.includes("--playwright") || args.includes("-p"),
   source: "flowrestling",
   edition: "current",
 };
